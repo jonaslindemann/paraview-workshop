@@ -15,8 +15,11 @@ if __name__ == "__main__":
     ez = arrays["ez"]
     u = arrays["u"]
 
+    # --- Creating coords and topo arrays for VTK
+
     node_hash_coords = {}
     node_hash_numbers = {}
+    node_hash_dofs = {}
     el_hash_dofs = []
 
     for elx, ely, elz, dofs in zip(ex, ey, ez, edof):
@@ -39,14 +42,21 @@ if __name__ == "__main__":
         node_hash_numbers[hash(tuple(el_dof3))] = -1
         node_hash_numbers[hash(tuple(el_dof4))] = -1
 
+        node_hash_dofs[hash(tuple(el_dof1))] = el_dof1
+        node_hash_dofs[hash(tuple(el_dof2))] = el_dof2
+        node_hash_dofs[hash(tuple(el_dof3))] = el_dof3
+        node_hash_dofs[hash(tuple(el_dof4))] = el_dof4
+
         el_hash_dofs.append([hash(tuple(el_dof1)), hash(tuple(el_dof2)), hash(tuple(el_dof3)), hash(tuple(el_dof4))])
 
     coord_count = 0
 
     coords = []
+    node_dofs = []
 
     for hash in node_hash_numbers.keys():
         node_hash_numbers[hash] = coord_count
+        node_dofs.append(node_hash_dofs[hash])
         coord_count +=1
 
         coords.append(node_hash_coords[hash])
@@ -62,38 +72,22 @@ if __name__ == "__main__":
             ]
         )
 
-    point_data = None
-    scalars = None
-    vectors1 = None
-    vectors2 = None
-    cell_data = None
+    # --- Creating vector fields for VTK
 
-    #for i in range(0,len(a),2):
-    #    displ.append([np.asscalar(a[i]), np.asscalar(a[i+1]), 0.0])                    
-    #    point_data = vtk.PointData(vtk.Vectors(displ, name="displacements"))
+    for c in range(200):
 
-    #scalars = vtk.Scalars(von_mises, name="scalar")
-    #vectors1 = vtk.Vectors(principal1, name="principal1")
-    #vectors2 = vtk.Vectors(principal2, name="principal2")
+        point_data = vtk.PointData()
 
-    #cell_data = vtk.CellData(scalars, vectors1, vectors2)
+        vector_field = []
 
-    structure = vtk.UnstructuredGrid(points=coords, tetra=topo)
-    #structure = vtk.PolyData(points = coords, polygons = topo)
+        u_real = u.astype(float)
 
-    #vtk_data = vtk.VtkData(structure, cell_data, point_data)
-    vtk_data = vtk.VtkData(structure)
-    vtk_data.tofile("data1.vtk", "ascii")
+        for dofs in node_dofs:
+            vector_field.append(u_real[dofs-1,c])
 
+        point_data.append(vtk.Vectors(vector_field, name="displacement"))
 
-
-    
-    
-
-
-    # print(ex.shape)
-    # print(u.shape)
-    # print(edof.shape)
-    # print(edof)
-
+        structure = vtk.UnstructuredGrid(points=coords, tetra=topo)
+        vtk_data = vtk.VtkData(structure, point_data)
+        vtk_data.tofile("data%04d.vtk" % c, "ascii")
 
