@@ -4,62 +4,72 @@ import scipy.io as spi
 import calfem.core as cfc
 
 
-if __name__ == "__main__":
+def convert_to_node_topo(edof, ex, ey, ez, n_dofs_per_node=3, ignore_first=True):
+    """
+    Routine to convert dof based topology and element coordinates to node based
+    topology required for visualisation with VTK and other visualisation frameworks
 
-    arrays = spi.loadmat("Data1.mat")
-    print(arrays.keys())
-    
-    edof = arrays["Edof"]
-    ex = arrays["ex"]
-    ey = arrays["ey"]
-    ez = arrays["ez"]
-    u = arrays["u"]
-
-    # --- Creating coords and topo arrays for VTK
+    :param array edof: element topology [nel x (n_dofs_per_node)|(n_dofs_per_node+1)*n_nodes ]
+    :param array ex: element x coordinates [nel x n_nodes]
+    :param array ey: element y coordinates [nel x n_nodes]
+    :param array ez: element z coordinates [nel x n_nodes]
+    :param array n_dofs_per_node: number of dofs per node. (default = 3)
+    :param boolean ignore_first: ignore first column of edof. (default = True)
+    :return array coords: Array of node coordinates. [n_nodes x 3]
+    :return array topo: Node topology. [nel x n_nodes]
+    :return array node_dofs: Dofs for each node. [n_nodes x n_dofs_per_node]
+    """
 
     node_hash_coords = {}
     node_hash_numbers = {}
     node_hash_dofs = {}
     el_hash_dofs = []
 
+    nel, cols = edof.shape
+
+    if ignore_first:
+        tot_dofs = cols-1
+    else:
+        tot_dofs = cols
+
+    n_nodes = int(tot_dofs / n_dofs_per_node)
+
+    print("cols    =", tot_dofs)
+    print("nel     =", nel)
+    print("n_nodes =", n_nodes)
+
     for elx, ely, elz, dofs in zip(ex, ey, ez, edof):
-        el_dofs = dofs[1:]
+
+        if ignore_first:
+            el_dofs = dofs[1:]
+        else:
+            el_dofs = dofs
 
         # 0 1 2  3 4 5  6 7 8  9 12 11 
 
-        el_dof1 = el_dofs[:3]
-        el_dof2 = el_dofs[3:6]
-        el_dof3 = el_dofs[6:9]
-        el_dof4 = el_dofs[9:]
+        el_dof = np.zeros((n_nodes, n_dofs_per_node), dtype=int)
+        el_hash_topo = []
 
-        node_hash_coords[hash(tuple(el_dof1))] = [elx[0], ely[0], elz[0]]
-        node_hash_coords[hash(tuple(el_dof2))] = [elx[1], ely[1], elz[1]]
-        node_hash_coords[hash(tuple(el_dof3))] = [elx[2], ely[2], elz[2]]
-        node_hash_coords[hash(tuple(el_dof4))] = [elx[3], ely[3], elz[3]]
+        for i in range(n_nodes):
+            el_dof[i] = el_dofs[ (i*n_dofs_per_node):((i+1)*n_dofs_per_node) ]
+            node_hash_coords[hash(tuple(el_dof[i]))] = [elx[i], ely[i], elz[i]]
+            node_hash_numbers[hash(tuple(el_dof[i]))] = -1
+            node_hash_dofs[hash(tuple(el_dof[i]))] = el_dof[i]
+            el_hash_topo.append(hash(tuple(el_dof[i])))
 
-        node_hash_numbers[hash(tuple(el_dof1))] = -1
-        node_hash_numbers[hash(tuple(el_dof2))] = -1
-        node_hash_numbers[hash(tuple(el_dof3))] = -1
-        node_hash_numbers[hash(tuple(el_dof4))] = -1
-
-        node_hash_dofs[hash(tuple(el_dof1))] = el_dof1
-        node_hash_dofs[hash(tuple(el_dof2))] = el_dof2
-        node_hash_dofs[hash(tuple(el_dof3))] = el_dof3
-        node_hash_dofs[hash(tuple(el_dof4))] = el_dof4
-
-        el_hash_dofs.append([hash(tuple(el_dof1)), hash(tuple(el_dof2)), hash(tuple(el_dof3)), hash(tuple(el_dof4))])
+        el_hash_dofs.append(el_hash_topo)
 
     coord_count = 0
 
     coords = []
     node_dofs = []
 
-    for hash in node_hash_numbers.keys():
-        node_hash_numbers[hash] = coord_count
-        node_dofs.append(node_hash_dofs[hash])
+    for node_hash in node_hash_numbers.keys():
+        node_hash_numbers[node_hash] = coord_count
+        node_dofs.append(node_hash_dofs[node_hash])
         coord_count +=1
 
-        coords.append(node_hash_coords[hash])
+        coords.append(node_hash_coords[node_hash])
 
     topo = []
 
@@ -72,9 +82,24 @@ if __name__ == "__main__":
             ]
         )
 
+    return coords, topo, node_dofs
+
+if __name__ == "__main__":
+
+    arrays = spi.loadmat("Data1.mat")
+    print(arrays.keys())
+    
+    edof = arrays["Edof"]
+    ex = arrays["ex"]
+    ey = arrays["ey"]
+    ez = arrays["ez"]
+    u = arrays["u"]
+
+    coords, topo, node_dofs = convert_to_node_topo(edof, ex, ey, ez)
+
     # --- Creating vector fields for VTK
 
-    for c in range(200):
+    for c in range(1):
 
         point_data = vtk.PointData()
 
