@@ -129,3 +129,4 @@ dmypy.json
 .pyre/
 CFD/pipe.vtk
 Photogrammetry/skivarp.ply
+CFD/pipe.zip

@@ -2,11 +2,11 @@
 the associated vector and scalar fields"""
 from vedo import *
 
-settings.useDepthPeeling = True
+settings.use_depth_peeling = True
 
 g = load("pipe.vtk")
 
-coords = g.points()
+coords = g.vertices()  # get the points coordinates as a numpy array
 
 # g.print() gives the list of point and cell data contained in g
 vects  = g.pointdata['Momentum']/600 
