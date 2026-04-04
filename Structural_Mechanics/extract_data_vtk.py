@@ -99,7 +99,7 @@ if __name__ == "__main__":
 
     # --- Creating vector fields for VTK
 
-    for c in range(1):
+    for c in range(199):
 
         point_data = vtk.PointData()
 
