@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//e/vcpkg/**)",
+      "Bash(vcpkg env:*)",
+      "Bash(vcpkg list:*)",
+      "Bash(vcpkg integrate:*)",
+      "Bash(vcpkg install:*)",
+      "Bash(cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE=\"E:/vcpkg/scripts/buildsystems/vcpkg.cmake\")",
+      "Bash(cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE=\"E:/vcpkg/scripts/buildsystems/vcpkg.cmake\" --debug-trycompile)",
+      "Bash(cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE=E:/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_INSTALLED_DIR=e:/Users/Jonas/Development/paraview-workshop/Catalyst_Heat/vcpkg_installed)"
+    ]
+  }
+}

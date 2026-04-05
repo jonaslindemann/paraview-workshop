@@ -130,3 +130,7 @@ dmypy.json
 CFD/pipe.vtk
 Photogrammetry/skivarp.ply
 CFD/pipe.zip
+/heat_cpp/vcpkg_installed
+/heat_python/output
+/Simulation/output
+/Simulation/output
